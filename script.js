@@ -182,53 +182,62 @@ function initLetter() {
     createHearts();
     const heartInterval = setInterval(createHearts, 2000);
     
-    // Handle envelope/letter click
-    function handleClick() {
-        if (isOpen) {
-            // If letter is open, show prompt to close
-            const prompt = document.createElement('div');
-            prompt.className = 'close-prompt';
-            prompt.innerHTML = 'Click the letter again to enter our anniversary site ❤️';
-            overlay.appendChild(prompt);
-            
-            // Hide prompt after 5 seconds if not clicked
-            const promptTimeout = setTimeout(() => {
-                if (prompt.parentNode) {
-                    prompt.style.animation = 'fadeOut 0.5s forwards';
-                    setTimeout(() => prompt.remove(), 500);
-                }
-            }, 5000);
-            
-            // Close handler
-            const closeHandler = () => {
-                clearTimeout(promptTimeout);
+    // Show the close prompt
+    function showClosePrompt() {
+        const prompt = document.createElement('div');
+        prompt.className = 'close-prompt';
+        prompt.innerHTML = 'Click the letter to enter our anniversary site ❤️';
+        overlay.appendChild(prompt);
+        
+        // Hide prompt after 5 seconds if not clicked
+        const promptTimeout = setTimeout(() => {
+            if (prompt.parentNode) {
+                prompt.style.animation = 'fadeOut 0.5s forwards';
+                setTimeout(() => prompt.remove(), 500);
+            }
+        }, 5000);
+        
+        // Close handler for the letter
+        const letterClickHandler = (e) => {
+            e.stopPropagation();
+            clearTimeout(promptTimeout);
+            if (prompt.parentNode) {
                 prompt.remove();
-                letter.removeEventListener('click', closeHandler);
-                
-                envelope.classList.remove('open');
-                letter.style.pointerEvents = 'none';
-                
-                setTimeout(() => {
-                    overlay.style.opacity = '0';
-                    overlay.style.pointerEvents = 'none';
-                    document.body.style.overflow = 'auto';
-                    isOpen = false;
-                    clearInterval(heartInterval);
-                }, 1000);
-            };
+            }
             
-            // Update click handler to close on second click
-            letter.removeEventListener('click', handleClick);
-            letter.addEventListener('click', closeHandler);
-            return;
-        } else {
-            // If envelope is closed, open it
+            // Close the letter and overlay
+            envelope.classList.remove('open');
+            letter.style.pointerEvents = 'none';
+            
+            setTimeout(() => {
+                overlay.style.opacity = '0';
+                overlay.style.pointerEvents = 'none';
+                document.body.style.overflow = 'auto';
+                isOpen = false;
+                clearInterval(heartInterval);
+            }, 1000);
+            
+            // Remove this listener after use
+            letter.removeEventListener('click', letterClickHandler);
+        };
+        
+        // Add click handler for the letter
+        letter.addEventListener('click', letterClickHandler);
+    }
+    
+    // Handle envelope click
+    function handleClick() {
+        if (!isOpen) {
+            // Open the envelope
             envelope.classList.add('open');
             
             // Enable letter interaction after animation
             setTimeout(() => {
                 letter.style.pointerEvents = 'auto';
                 isOpen = true;
+                
+                // Show the close prompt immediately after opening
+                showClosePrompt();
                 
                 // Add confetti when letter is first opened
                 createConfetti(overlay);
